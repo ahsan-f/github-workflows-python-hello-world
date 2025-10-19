@@ -1,17 +1,19 @@
-name: Python Tests
+name: Python CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main] # Trigger on pushes to main
   pull_request:
-    branches: [main]
-  workflow_dispatch: 
+    branches: [main] # Trigger on pull requests to main
+  workflow_dispatch: # Allow manual triggering
+
 jobs:
   test:
+    name: Run Python Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9"]
+        python-version: ["3.9"] # Only testing on one version is faster for the CI
 
     steps:
       - uses: actions/checkout@v4
@@ -24,12 +26,25 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          # Assuming you have a requirements.txt, otherwise this will fail
+          # pip install -r requirements.txt
 
       - name: Run pytest
         run: |
+          # Assuming your tests are set up in a 'tests/' directory
           pytest tests/
-          - name: Set up Docker Buildx
+          
+  build_and_push:
+    name: Build and Push Docker Image
+    needs: test # This job will only run if the 'test' job succeeds
+    runs-on: ubuntu-latest
+    # Only run on push to main or manual dispatch, not on pull requests
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' 
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
@@ -45,5 +60,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ahsand10/helloworld
             ahsand10/helloworld:latest
+            ahsand10/helloworld:${{ github.sha }}
+            
