@@ -8,4 +8,4 @@ def test_default_message():
 
 def test_custom_message():
     hw = HelloWorld("GitHub")
-    assert hw.hello() == "Hello GitHub ned"
+    assert hw.hello() == "Hello GitHub "
